@@ -1,5 +1,3 @@
-Connection Accepted.
-Subscribed to topic!
 Positioning update: [{"version":"1","alive":true,"tagId":"27196","success":true,"timestamp":1590026167.165,"data":{"tagData":{},"anchorData":[],"coordinates":{"x":533,"y":-45,"z":1857},"orientation":{"yaw":2.808,"roll":0.167,"pitch":-1.664},"metrics":{"latency":35.1,"rates":{"update":24.971,"success":24.972}}}}]
 Positioning update: [{"version":"1","alive":true,"tagId":"27196","success":true,"timestamp":1590026167.212,"data":{"tagData":{},"anchorData":[],"coordinates":{"x":448,"y":12,"z":1820},"orientation":{"yaw":2.766,"roll":0.148,"pitch":-1.705},"metrics":{"latency":39.3,"rates":{"update":24.702,"success":24.703}}}}]
 Positioning update: [{"version":"1","alive":true,"tagId":"27196","success":true,"timestamp":1590026167.255,"data":{"tagData":{},"anchorData":[],"coordinates":{"x":396,"y":26,"z":1870},"orientation":{"yaw":2.834,"roll":0.134,"pitch":-1.688},"metrics":{"latency":35,"rates":{"update":24.745,"success":24.746}}}}]
