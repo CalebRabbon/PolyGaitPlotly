@@ -1,0 +1,7 @@
+{
+  "positions": [
+    {"version":"1","alive":true,"tagId":"27196","success":true,"timestamp":1589960921.2,"data":{"tagData":{},"anchorData":[],"coordinates":{"x":11680,"y":44505,"z":783},"orientation":{"yaw":3.437,"roll":-0.003,"pitch":-0.036},"metrics":{"latency":33.6,"rates":{"update":12.9,"success":12.9}}}},
+    {"version":"1","alive":true,"tagId":"27211","success":true,"timestamp":1589960921.235,"data":{"tagData":{},"anchorData":[],"coordinates":{"x":12036,"y":44778,"z":1208},"orientation":{"yaw":4.539,"roll":0.021,"pitch":0.048},"metrics":{"latency":43.6,"rates":{"update":12.899,"success":12.899}}}},
+    {"version":"1","alive":true,"tagId":"27196","success":true,"timestamp":1589960921.279,"data":{"tagData":{},"anchorData":[],"coordinates":{"x":11670,"y":44488,"z":834},"orientation":{"yaw":3.437,"roll":-0.003,"pitch":-0.036},"metrics":{"latency":31.6,"rates":{"update":12.915,"success":12.915}}}}
+  ]
+}
