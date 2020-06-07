@@ -23,16 +23,19 @@ def getTimeStamp(line):
    print(timestamp)
    return timestamp
 
+def getID(line):
+    return line[0]
+
 def main():
    with open('ministock.csv', 'r') as csv_file:
        csv_reader = csv.reader(csv_file)
-   
-   
+
        next(csv_reader)
-   
+
        for line in csv_reader:
            timestamp = getTimeStamp(line)
            print(timestamp)
+           print(getID(line))
    
    
    timestamp = datetime.datetime(1970, 1, 1, 0, 0, 0).timestamp()

@@ -21,12 +21,11 @@ def on_connect(client, userdata, flags, rc):
 
 # callback triggered by a new Pozyx data packet
 def on_message(client, userdata, msg):
-    #print("Positioning update:", msg.payload.decode())
+    print(msg.payload.decode())
     msg.payload.decode()
 
 def on_subscribe(client, userdata, mid, granted_qos):
 #    print("Subscribed to topic!")
-    0 + 1
 
 
 client = mqtt.Client()
@@ -39,4 +38,6 @@ client.connect(host, port=port)
 client.subscribe(topic)
 
 # works blocking, other, non-blocking, clients are available too.
+print("Hello\n")
 client.loop_forever()
+print("END\n")
