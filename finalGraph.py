@@ -3,6 +3,10 @@ import sys
 import datetime
 import csv
 import sqlite3
+import numpy as np
+import plotly.graph_objects as go
+import skimage.io as sio
+
 from pozyxpoint import PozyxPoint
 from tag import Tag
 
@@ -34,7 +38,6 @@ def findAvgLocation(loc):
 
 #  Find totals
    for l in loc:
-      print(l)
       elements += 1
       xAvg += l[x]
       yAvg += l[y]
@@ -43,8 +46,6 @@ def findAvgLocation(loc):
 
    if(elements == 0):
       return PozyxPoint(0, 0, 0, 0)
-
-   print(elements)
 
    xAvg = xAvg / elements
    yAvg = yAvg / elements
@@ -86,7 +87,7 @@ def getTimeStamp(line):
    #print("year " + str(year) + " month "+  str(month) + " day " + str(day) + " time: " + time)
    # We may need to change the timezone but not sure - Caleb Rabbon 6/7/2020
    timestamp = datetime.datetime(int(year), month, day, hour, minute, second).timestamp()
-   #print(timestamp)
+
    return timestamp
 
 def getID(line):
@@ -152,7 +153,6 @@ def findAllPositions(tagList, coordinates):
    # Fill in the coordinate database
    for val in coordinates:
       insert_pozyxpoint(val)
-      print(val)
 
    for tag in tagList:
       pt = get_position(tag.getTimestamp)
@@ -163,6 +163,63 @@ def findAllPositions(tagList, coordinates):
 def checkArgs():
    if len(sys.argv) != 3:
       sys.exit("Usage Error: Not enough arguments \nExample Run: python finalGraph.py ministock.csv test.json")
+
+def createGraph(finalList):
+   scaler = 2;
+   xlist = []
+   ylist = []
+   zlist = []
+   textlist = []
+
+   xval = 0
+   yval = 1
+   zval = 2
+   timeval = 3
+   pozyx_ind = 1
+
+   for val in finalList:
+       pos = val[pozyx_ind]
+       xlist.append(pos.x)
+       ylist.append(pos.y)
+       zlist.append(pos.z)
+       textlist.append(pos.timestamp)
+
+   fig = go.Figure(data=[go.Scatter3d(
+       x=xlist,
+       y=ylist,
+       z=zlist,
+       text=textlist,
+       mode='markers',
+       marker=dict(
+           size=12,
+           color=zlist,                # set color to an array/list of desired values
+           colorscale='Viridis',   # choose a colorscale
+           opacity=0.8
+       )
+   )])
+
+   # Below adds a figure at Z coordinate 0
+   # Below code from https://community.plotly.com/t/trying-to-add-a-png-jpg-image-to-a-3d-surface-graph-r/4192/2
+
+   # Change the dimensions of the image
+   x = np.linspace(0, 12*scaler, 500) #Parameters: Start Value, End Value, Number of points inbetween
+   y = np.linspace(0, 18*scaler, 729)
+   x, y = np.meshgrid(x, y)
+   z = x
+
+   #image = sio.imread ("./cat-128.jpg")
+   image = sio.imread ("./SmartDraw-min.png")
+   print(image.shape)
+   img = image[:,:, 1]
+   Z = 0 * np.ones(z.shape)
+   fig.add_surface(x=x, y=y, z=Z,
+                   surfacecolor=np.flipud(img),
+                   colorscale='matter_r',
+                   showscale=False)
+   # tight layout
+   #fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
+   fig.show()
+
 
 def main():
    checkArgs()
@@ -183,7 +240,10 @@ def main():
    for e in finalList:
       print(e)
 
+   createGraph(finalList)
+
    conn.close()
 
 if __name__== "__main__":
    main()
+
