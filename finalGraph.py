@@ -1,6 +1,7 @@
 import json
 import sys
 import datetime
+import pytz
 import csv
 import sqlite3
 import numpy as np
@@ -83,8 +84,8 @@ def getTimeStamp(date, time):
    second = int(timeArr[2])
 
    #print("year " + str(year) + " month "+  str(month) + " day " + str(day) + " time: " + time)
-   # We may need to change the timezone but not sure - Caleb Rabbon 6/7/2020
-   timestamp = datetime.datetime(year, month, day, hour, minute, second).timestamp()
+   # Sets the timezone to UTC. To make it read in the timezone you are currently in leave the last argument out
+   timestamp = datetime.datetime(year, month, day, hour, minute, second, tzinfo=pytz.UTC).timestamp()
 
    return timestamp
 
@@ -215,8 +216,7 @@ def createGraph(finalList):
    x, y = np.meshgrid(x, y)
    z = x
 
-   #image = sio.imread ("./cat-128.jpg")
-   image = sio.imread ("./SmartDraw-min.png")
+   image = sio.imread ("./floorplan.png")
    #print(image.shape)
    img = image[:,:, 1]
    Z = 0 * np.ones(z.shape)
