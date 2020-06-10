@@ -26,7 +26,7 @@ def on_message(client, userdata, msg):
 
 def on_subscribe(client, userdata, mid, granted_qos):
 #    print("Subscribed to topic!")
-
+    1 + 0
 
 client = mqtt.Client()
 
@@ -38,6 +38,4 @@ client.connect(host, port=port)
 client.subscribe(topic)
 
 # works blocking, other, non-blocking, clients are available too.
-print("Hello\n")
 client.loop_forever()
-print("END\n")

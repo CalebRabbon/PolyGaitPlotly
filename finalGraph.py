@@ -83,9 +83,10 @@ def getTimeStamp(date, time):
    minute = int(timeArr[1])
    second = int(timeArr[2])
 
-   #print("year " + str(year) + " month "+  str(month) + " day " + str(day) + " time: " + time)
-   # Sets the timezone to UTC. To make it read in the timezone you are currently in leave the last argument out
-   timestamp = datetime.datetime(year, month, day, hour, minute, second, tzinfo=pytz.UTC).timestamp()
+   # Below Sets the timezone to UTC. To make it read in the timezone you are currently in leave the last argument out
+   #timestamp = datetime.datetime(year, month, day, hour, minute, second, tzinfo=pytz.UTC).timestamp()
+
+   timestamp = datetime.datetime(year, month, day, hour, minute, second).timestamp()
 
    return timestamp
 
@@ -112,7 +113,7 @@ def createTagList(filename):
 
    return tagList
 
-def createPozyxPoints(filename):
+def createPozyxPoints(filename, searchTag):
    coordsList = []
 
    jsonfile = open(filename, 'r')
@@ -120,25 +121,30 @@ def createPozyxPoints(filename):
          json_line_list = json.loads(line)
          json_line = json_line_list[0]
          tag = json_line["tagId"]
-         timestamp = json_line["timestamp"]
+         if (int(tag) == searchTag):
+            if("errorCode" in json_line):
+               print(json_line)
+               continue
 
-         # Get coordinate values in mm
-         xmm = json_line["data"]["coordinates"]["x"]
-         ymm = json_line["data"]["coordinates"]["y"]
-         zmm = json_line["data"]["coordinates"]["z"]
+            timestamp = json_line["timestamp"]
 
-         # Convert coordiates from mm to inches
-         xinch = xmm * .0393701
-         yinch = ymm * .0393701
-         zinch = zmm * .0393701
+            # Get coordinate values in mm
+            xmm = json_line["data"]["coordinates"]["x"]
+            ymm = json_line["data"]["coordinates"]["y"]
+            zmm = json_line["data"]["coordinates"]["z"]
 
-         # Convert coordinates from inches to feet
-         xfeet = xinch / 12
-         yfeet = yinch / 12
-         zfeet = zinch / 12
-         pt = PozyxPoint(xfeet, yfeet, zfeet, timestamp)
+            # Convert coordiates from mm to inches
+            xinch = xmm * .0393701
+            yinch = ymm * .0393701
+            zinch = zmm * .0393701
 
-         coordsList.append(pt)
+            # Convert coordinates from inches to feet
+            xfeet = xinch / 12
+            yfeet = yinch / 12
+            zfeet = zinch / 12
+            pt = PozyxPoint(xfeet, yfeet, zfeet, timestamp)
+
+            coordsList.append(pt)
 
    # Closing jsonfile
    jsonfile.close()
@@ -160,8 +166,8 @@ def findAllPositions(tagList, coordinates):
    return finalList
 
 def checkArgs():
-   if len(sys.argv) != 3:
-      sys.exit("Usage Error: Not enough arguments \nExample Run: python finalGraph.py ministock.csv test.json")
+   if len(sys.argv) != 4:
+      sys.exit("Usage Error: Not enough arguments \nExample Run: python3 finalGraph.py ministock.csv roompoints.json output.csv")
 
 def getTimeStr(timestamp):
     result = datetime.datetime.fromtimestamp(timestamp).strftime("%m/%d/%Y, %H:%M:%S")
@@ -239,6 +245,16 @@ def createGraph(finalList):
 
    fig.show()
 
+def outputToCSV(finalList, fileName):
+   with open(fileName, 'w') as file:
+      writer = csv.DictReader(file)
+      file.write("Tag ID:, Date:, Time:, X(ft):, Y(ft):, Z(ft): \n")
+      for entry in finalList:
+         tag = entry[0]
+         pos = entry[1]
+         data = str(tag.tagID) + "," + str(tag.date) + "," + str(tag.time) + "," + \
+                str(pos.x) + "," + str(pos.y) + "," + str(pos.z) + "\n"
+         file.write(data)
 
 def main():
    checkArgs()
@@ -251,8 +267,8 @@ def main():
    # Creates the list of tags from the ministock
    tagList = createTagList(sys.argv[1])
 
-   # Creates a list of PozyxPoint objects
-   coordinates = createPozyxPoints(sys.argv[2])
+   # Creates a list of PozyxPoint objects, searching for the tag 27211
+   coordinates = createPozyxPoints(sys.argv[2], 27211)
 
    finalList = findAllPositions(tagList, coordinates)
 
@@ -260,6 +276,8 @@ def main():
       print(tag)
 
    createGraph(finalList)
+
+   outputToCSV(finalList, sys.argv[3])
 
    conn.close()
 
