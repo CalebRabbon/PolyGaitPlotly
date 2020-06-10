@@ -54,7 +54,7 @@ def findAvgLocation(loc):
 
    return PozyxPoint(xAvg, yAvg, zAvg, tAvg)
 
-# Finds the average location of the input timestamp with in +/- .75 seconds of the input timestamp
+# Finds the average location of the input timestamp within +/- .75 seconds of the input timestamp
 # Returns a PozyxPoint
 def get_position(timestamp):
    locations = []
@@ -68,11 +68,9 @@ def remove_pozyxpoint(timestamp):
         c.execute("DELETE from pozyxpoint WHERE timestamp= :t", {'t': pozyxpoint.timestamp})
 
 
-def getTimeStamp(line):
+def getTimeStamp(date, time):
    dateArr = []
    timeArr = []
-   date = line[2]
-   time = line[3]
 
    dateArr = date.split('-', 2)
    year = int(dateArr[0])
@@ -86,7 +84,7 @@ def getTimeStamp(line):
 
    #print("year " + str(year) + " month "+  str(month) + " day " + str(day) + " time: " + time)
    # We may need to change the timezone but not sure - Caleb Rabbon 6/7/2020
-   timestamp = datetime.datetime(int(year), month, day, hour, minute, second).timestamp()
+   timestamp = datetime.datetime(year, month, day, hour, minute, second).timestamp()
 
    return timestamp
 
@@ -107,15 +105,14 @@ def createTagList(filename):
          date = line[2]
          time = line[3]
          tagID = getID(line)
-         timestamp = getTimeStamp(line)
+         timestamp = getTimeStamp(date, time)
          tag = Tag(tagID, date, time, timestamp)
          tagList.append(tag)
 
    return tagList
 
 def createPozyxPoints(filename):
-   json_data = []
-   coor = []
+   coordsList = []
 
    jsonfile = open(filename, 'r')
    for line in jsonfile:
@@ -123,6 +120,8 @@ def createPozyxPoints(filename):
          json_line = json_line_list[0]
          tag = json_line["tagId"]
          timestamp = json_line["timestamp"]
+
+         # Get coordinate values in mm
          xmm = json_line["data"]["coordinates"]["x"]
          ymm = json_line["data"]["coordinates"]["y"]
          zmm = json_line["data"]["coordinates"]["z"]
@@ -138,13 +137,12 @@ def createPozyxPoints(filename):
          zfeet = zinch / 12
          pt = PozyxPoint(xfeet, yfeet, zfeet, timestamp)
 
-#         coor.append([xfeet, yfeet, zfeet, timestamp])
-         coor.append(pt)
+         coordsList.append(pt)
 
    # Closing jsonfile
    jsonfile.close()
 
-   return coor
+   return coordsList
 
 # Takes in a tagList and the coordinates list and returns a final list of tuples representing the tag and its position
 def findAllPositions(tagList, coordinates):
@@ -164,6 +162,10 @@ def checkArgs():
    if len(sys.argv) != 3:
       sys.exit("Usage Error: Not enough arguments \nExample Run: python finalGraph.py ministock.csv test.json")
 
+def getTimeStr(timestamp):
+    result = datetime.datetime.fromtimestamp(timestamp).strftime("%m/%d/%Y, %H:%M:%S")
+    return result
+
 def createGraph(finalList):
    scaler = 2;
    xlist = []
@@ -171,10 +173,7 @@ def createGraph(finalList):
    zlist = []
    textlist = []
 
-   xval = 0
-   yval = 1
-   zval = 2
-   timeval = 3
+   tag_ind = 0
    pozyx_ind = 1
 
    for val in finalList:
@@ -182,17 +181,25 @@ def createGraph(finalList):
        xlist.append(pos.x)
        ylist.append(pos.y)
        zlist.append(pos.z)
-       textlist.append(pos.timestamp)
+
+       tag = val[tag_ind]
+       textStr = "<b>Tag ID:</b> " + tag.tagID + "<br><b>Time:</b> " + getTimeStr(pos.timestamp)
+       textlist.append(textStr)
 
    fig = go.Figure(data=[go.Scatter3d(
        x=xlist,
        y=ylist,
        z=zlist,
+       hovertemplate=
+       '<b>x:</b> %{x:.4f}<br>' +
+       '<b>y:</b> %{y:.4f}<br>' +
+       '<b>z:</b> %{z:.4f}<br>' +
+       '%{text}<extra></extra>',
        text=textlist,
        mode='markers',
        marker=dict(
-           size=12,
-           color=zlist,                # set color to an array/list of desired values
+           size=8,
+           color=zlist,            # set color to an array/list of desired values
            colorscale='Viridis',   # choose a colorscale
            opacity=0.8
        )
@@ -202,14 +209,15 @@ def createGraph(finalList):
    # Below code from https://community.plotly.com/t/trying-to-add-a-png-jpg-image-to-a-3d-surface-graph-r/4192/2
 
    # Change the dimensions of the image
-   x = np.linspace(0, 12*scaler, 500) #Parameters: Start Value, End Value, Number of points inbetween
-   y = np.linspace(0, 18*scaler, 729)
+   # Parameters: Start Value, End Value, Number of points in between
+   x = np.linspace(0, 12*scaler, 500) # 500 = width of image in pixels
+   y = np.linspace(0, 18*scaler, 729) # 729 = height of image in pixels
    x, y = np.meshgrid(x, y)
    z = x
 
    #image = sio.imread ("./cat-128.jpg")
    image = sio.imread ("./SmartDraw-min.png")
-   print(image.shape)
+   #print(image.shape)
    img = image[:,:, 1]
    Z = 0 * np.ones(z.shape)
    fig.add_surface(x=x, y=y, z=Z,
@@ -218,6 +226,17 @@ def createGraph(finalList):
                    showscale=False)
    # tight layout
    #fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
+
+   camera = dict(eye=dict(x=0.0, y=0.0, z=2.5))
+   fig.update_layout(scene_camera=camera)
+   fig.update_layout(scene=dict(
+       xaxis_title='X (ft)',
+       xaxis=dict(range=[0, 24]),
+       yaxis_title='Y (ft)',
+       yaxis=dict(range=[0, 36]),
+       zaxis_title='Z (ft)',
+       zaxis=dict(range=[0, 10])))
+
    fig.show()
 
 
@@ -237,8 +256,8 @@ def main():
 
    finalList = findAllPositions(tagList, coordinates)
 
-   for e in finalList:
-      print(e)
+   for tag in finalList:
+      print(tag)
 
    createGraph(finalList)
 
